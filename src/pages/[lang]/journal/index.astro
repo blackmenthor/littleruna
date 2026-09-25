@@ -1,0 +1,45 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { isLocale, localePath, type Locale } from '../../../i18n/locale';
+import { t } from '../../../i18n/ui';
+import { getArticles } from '../../../lib/journal';
+import { sanityConfigured } from '../../../config';
+
+export function getStaticPaths() {
+  return [{ params: { lang: 'en' } }, { params: { lang: 'id' } }];
+}
+
+const { lang } = Astro.params;
+if (!isLocale(lang)) return Astro.redirect('/en');
+const locale: Locale = lang;
+const copy = t(locale);
+const articles = await getArticles();
+---
+
+<Base locale={locale} title={copy.journalTitle} description={copy.journalLead}>
+  <section class="mx-auto max-w-3xl px-4 py-12 md:px-6">
+    <p class="eyebrow text-rose">{copy.heroEyebrow}</p>
+    <h1 class="wordmark mt-2 text-5xl">{copy.journalTitle}</h1>
+    <p class="mt-4 leading-7 text-muted">{copy.journalLead}</p>
+    {
+      articles.length === 0 ? (
+        <p class="mt-10 border-t border-line pt-6 text-muted">{copy.emptyJournal}</p>
+      ) : (
+        <ul class="mt-10 divide-y divide-line border-y border-line">
+          {articles.map((article) => (
+            <li>
+              <a class="block py-6 hover:text-rose" href={localePath(locale, `/journal/${article.slug}`)}>
+                <time class="eyebrow text-muted" datetime={article.publishedAt}>{article.publishedAt}</time>
+                <h2 class="wordmark mt-2 text-4xl text-ink">{article.title[locale]}</h2>
+                <p class="mt-2 leading-7 text-muted">{article.excerpt[locale]}</p>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+    {!sanityConfigured && import.meta.env.DEV && (
+      <p class="mt-8 text-xs tracking-wide text-muted">Sanity is not connected. These notes are the local starter articles.</p>
+    )}
+  </section>
+</Base>

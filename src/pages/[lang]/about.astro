@@ -1,0 +1,37 @@
+---
+import Base from '../../layouts/Base.astro';
+import { isLocale, type Locale } from '../../i18n/locale';
+import { t } from '../../i18n/ui';
+
+export function getStaticPaths() {
+  return [{ params: { lang: 'en' } }, { params: { lang: 'id' } }];
+}
+
+const { lang } = Astro.params;
+if (!isLocale(lang)) return Astro.redirect('/en');
+const locale: Locale = lang;
+const copy = t(locale);
+
+const paragraphs =
+  locale === 'en'
+    ? [
+        'Little Runa makes clothes for girls from fabric that has already been used. Bedsheets, clothes, blankets. The cloth is looked over, and what still holds is cut into a new piece.',
+        'The work is made to order. A visit to the site is a way to see the styles and to write. There is no basket and no payment on this site.',
+        'The clothes are made with two places in mind: Europe and Indonesia. A request can say which one it is for.',
+      ]
+    : [
+        'Little Runa membuat baju untuk anak perempuan dari kain yang sudah pernah dipakai. Sprei, baju, selimut. Kainnya dilihat lagi, dan yang masih kuat dipotong menjadi potongan baru.',
+        'Pekerjaannya dibuat sesuai permintaan. Situs ini untuk melihat gaya-gayanya dan untuk menulis. Tidak ada keranjang dan tidak ada pembayaran di situs ini.',
+        'Baju-bajunya dibuat dengan dua tempat di pikiran: Eropa dan Indonesia. Sebuah permintaan bisa menyebut untuk yang mana.',
+      ];
+---
+
+<Base locale={locale} title={copy.aboutTitle}>
+  <article class="mx-auto max-w-2xl px-4 py-12 md:px-6">
+    <p class="eyebrow text-rose">{copy.heroEyebrow}</p>
+    <h1 class="wordmark mt-2 text-5xl">{copy.aboutTitle}</h1>
+    <div class="mt-8 space-y-5 leading-8">
+      {paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+    </div>
+  </article>
+</Base>

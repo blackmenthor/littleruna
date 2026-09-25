@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.astro/
+.wrangler/
+.env
+.env.*
+!.env.example
+.dev.vars
+.DS_Store
+
+# Camera originals. The site uses the resized copies in src/assets/styles.
+Styles/

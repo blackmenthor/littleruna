@@ -1,0 +1,44 @@
+---
+import type { Locale } from '../i18n/locale';
+import { localePath } from '../i18n/locale';
+import { t } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const copy = t(locale);
+const year = new Date().getFullYear();
+---
+
+<footer class="border-t border-line">
+  <div class="mx-auto grid max-w-6xl gap-10 px-4 py-14 md:grid-cols-4 md:px-6">
+    <div>
+      <p class="wordmark text-2xl uppercase">{copy.heroEyebrow}</p>
+      <p class="mt-3 max-w-xs text-sm leading-6 text-muted">{copy.announcement}</p>
+    </div>
+    <div>
+      <p class="eyebrow text-muted">{copy.footerAbout}</p>
+      <ul class="mt-3 space-y-2 text-sm">
+        <li><a class="hover:text-rose" href={localePath(locale, '/about')}>{copy.nav.about}</a></li>
+        <li><a class="hover:text-rose" href={localePath(locale, '/styles')}>{copy.nav.styles}</a></li>
+        <li><a class="hover:text-rose" href={localePath(locale, '/journal')}>{copy.nav.journal}</a></li>
+      </ul>
+    </div>
+    <div>
+      <p class="eyebrow text-muted">{copy.footerWrite}</p>
+      <ul class="mt-3 space-y-2 text-sm">
+        <li><a class="hover:text-rose" href={localePath(locale, '/contact')}>{copy.nav.contact}</a></li>
+        <li><a class="hover:text-rose" href={localePath(locale, '/privacy')}>{copy.privacy}</a></li>
+      </ul>
+    </div>
+    <div>
+      <p class="eyebrow text-muted">{copy.madeTitle}</p>
+      <p class="mt-3 text-sm leading-6 text-muted">{copy.points[1].text}</p>
+    </div>
+  </div>
+  <p class="border-t border-line px-4 py-4 text-center text-[0.68rem] tracking-[0.14em] uppercase text-muted">
+    © {year} Little Runa
+  </p>
+</footer>

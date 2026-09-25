@@ -1,0 +1,37 @@
+---
+import type { Locale } from '../i18n/locale';
+import { localePath, swapLocale } from '../i18n/locale';
+import { t } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const copy = t(locale);
+const path = Astro.url.pathname;
+const other = locale === 'en' ? 'id' : 'en';
+---
+
+<div class="border-b border-line bg-ink text-paper">
+  <p class="px-4 py-2 text-center text-[0.68rem] tracking-[0.16em] uppercase">{copy.announcement}</p>
+</div>
+
+<header class="border-b border-line">
+  <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 md:px-6">
+    <p class="text-[0.68rem] tracking-[0.18em] uppercase text-muted">
+      <a class:list={['hover:text-ink', locale === 'en' && 'text-ink']} href={swapLocale(path, 'en')}>EN</a>
+      <span class="px-1.5" aria-hidden="true">/</span>
+      <a class:list={['hover:text-ink', locale === 'id' && 'text-ink']} href={swapLocale(path, 'id')}>ID</a>
+    </p>
+    <a class="wordmark text-2xl uppercase md:text-3xl" href={localePath(locale)}>{copy.heroEyebrow}</a>
+    <a class="text-[0.68rem] tracking-[0.18em] uppercase hover:text-rose" href={localePath(locale, '/contact')}>
+      {copy.nav.contact}
+    </a>
+  </div>
+  <nav class="mx-auto flex max-w-6xl justify-center gap-6 px-4 pb-4 text-[0.72rem] tracking-[0.2em] uppercase md:gap-10" aria-label="Site">
+    <a class="hover:text-rose" href={localePath(locale, '/styles')}>{copy.nav.styles}</a>
+    <a class="hover:text-rose" href={localePath(locale, '/journal')}>{copy.nav.journal}</a>
+    <a class="hover:text-rose" href={localePath(locale, '/about')}>{copy.nav.about}</a>
+  </nav>
+</header>

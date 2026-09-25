@@ -1,0 +1,130 @@
+---
+import Base from '../../layouts/Base.astro';
+import { isLocale, type Locale } from '../../i18n/locale';
+import { t } from '../../i18n/ui';
+
+export function getStaticPaths() {
+  return [{ params: { lang: 'en' } }, { params: { lang: 'id' } }];
+}
+
+const { lang } = Astro.params;
+if (!isLocale(lang)) return Astro.redirect('/en');
+const locale: Locale = lang;
+const copy = t(locale);
+const sent = Astro.url.searchParams.get('sent') === '1';
+const error = Astro.url.searchParams.get('error');
+const errorText =
+  error === 'not_configured' ? copy.notConfigured : error === 'invalid' || error === 'send' ? copy.sendError : '';
+---
+
+<Base locale={locale} title={copy.contactTitle} description={copy.contactLead}>
+  <section class="mx-auto grid max-w-6xl gap-12 px-4 py-12 md:grid-cols-[1fr_1.1fr] md:px-6">
+    <div>
+      <p class="eyebrow text-rose">{copy.heroEyebrow}</p>
+      <h1 class="wordmark mt-2 text-5xl">{copy.contactTitle}</h1>
+      <p class="mt-4 max-w-md leading-7 text-muted">{copy.contactLead}</p>
+    </div>
+
+    {
+      sent ? (
+        <div class="border border-line p-8">
+          <h2 class="wordmark text-4xl">{copy.sentTitle}</h2>
+          <p class="mt-3 leading-7 text-muted">{copy.sentText}</p>
+        </div>
+      ) : (
+        <form class="space-y-5" method="post" action="/api/contact" data-contact-form>
+          <input type="hidden" name="locale" value={locale} />
+          <p class="absolute -left-[9999px] h-0 w-0 overflow-hidden" aria-hidden="true">
+            <label>
+              {copy.honeypot}
+              <input type="text" name="company" tabindex="-1" autocomplete="off" />
+            </label>
+          </p>
+
+          <label class="block">
+            <span class="eyebrow text-muted">{copy.name}</span>
+            <input class="mt-2 w-full border border-line bg-transparent px-3 py-3 outline-none focus:border-ink" name="name" required maxlength="80" />
+          </label>
+          <label class="block">
+            <span class="eyebrow text-muted">{copy.email}</span>
+            <input class="mt-2 w-full border border-line bg-transparent px-3 py-3 outline-none focus:border-ink" type="email" name="email" required maxlength="160" />
+          </label>
+          <div class="grid gap-5 sm:grid-cols-2">
+            <label class="block">
+              <span class="eyebrow text-muted">{copy.region}</span>
+              <select class="mt-2 w-full border border-line bg-transparent px-3 py-3 outline-none focus:border-ink" name="region" required>
+                <option value="europe">{copy.regionEurope}</option>
+                <option value="indonesia">{copy.regionIndonesia}</option>
+                <option value="other">{copy.regionOther}</option>
+              </select>
+            </label>
+            <label class="block">
+              <span class="eyebrow text-muted">{copy.intent}</span>
+              <select class="mt-2 w-full border border-line bg-transparent px-3 py-3 outline-none focus:border-ink" name="intent" required>
+                <option value="question">{copy.intentQuestion}</option>
+                <option value="request">{copy.intentRequest}</option>
+              </select>
+            </label>
+          </div>
+          <label class="block">
+            <span class="eyebrow text-muted">{copy.message}</span>
+            <textarea class="mt-2 min-h-36 w-full border border-line bg-transparent px-3 py-3 outline-none focus:border-ink" name="message" required minlength="10" maxlength="4000"></textarea>
+          </label>
+          <label class="flex items-start gap-3 text-sm leading-6">
+            <input class="mt-1" type="checkbox" name="consent" required />
+            <span>{copy.consent}</span>
+          </label>
+          <p class="text-sm text-rose" data-form-error hidden>{errorText}</p>
+          {errorText && <p class="text-sm text-rose">{errorText}</p>}
+          <button class="eyebrow border border-ink px-5 py-3 hover:bg-ink hover:text-paper" type="submit" data-submit>
+            {copy.send}
+          </button>
+        </form>
+      )
+    }
+  </section>
+</Base>
+
+<script define:vars={{ sending: copy.sending, send: copy.send, notConfigured: copy.notConfigured, sendError: copy.sendError }}>
+  const form = document.querySelector('[data-contact-form]');
+  if (!(form instanceof HTMLFormElement)) {
+    // The success state has no form.
+  } else {
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const button = form.querySelector('[data-submit]');
+      const error = form.querySelector('[data-form-error]');
+      if (button instanceof HTMLButtonElement) {
+        button.disabled = true;
+        button.textContent = sending;
+      }
+      if (error instanceof HTMLElement) error.hidden = true;
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { Accept: 'application/json' },
+        });
+        const body = await response.json().catch(() => ({}));
+        if (response.ok && body.ok) {
+          window.location.search = '?sent=1';
+          return;
+        }
+        const message = body.code === 'not_configured' ? notConfigured : sendError;
+        if (error instanceof HTMLElement) {
+          error.hidden = false;
+          error.textContent = message;
+        }
+      } catch {
+        if (error instanceof HTMLElement) {
+          error.hidden = false;
+          error.textContent = sendError;
+        }
+      }
+      if (button instanceof HTMLButtonElement) {
+        button.disabled = false;
+        button.textContent = send;
+      }
+    });
+  }
+</script>

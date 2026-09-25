@@ -1,0 +1,6 @@
+# Used by `wrangler pages dev` / `wrangler dev`. Not read by `astro dev`.
+# `astro dev` reads .env instead.
+
+RESEND_API_KEY=
+CONTACT_TO_EMAIL=
+CONTACT_FROM_EMAIL=Little Runa <hello@your-domain.com>
