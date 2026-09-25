@@ -2,8 +2,10 @@ import { defineConfig } from 'astro/config';
 import cloudflare from '@astrojs/cloudflare';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
+import { loadEnv } from 'vite';
 
-const site = process.env.PUBLIC_SITE_URL || 'http://localhost:4321';
+const env = loadEnv(process.env.NODE_ENV || 'production', process.cwd(), '');
+const site = env.PUBLIC_SITE_URL || process.env.PUBLIC_SITE_URL || 'http://localhost:4321';
 
 export default defineConfig({
   site,
@@ -13,7 +15,17 @@ export default defineConfig({
     imageService: 'compile',
     prerenderEnvironment: 'node',
   }),
-  integrations: [sitemap()],
+  integrations: [
+    sitemap({
+      i18n: {
+        defaultLocale: 'en',
+        locales: {
+          en: 'en',
+          id: 'id',
+        },
+      },
+    }),
+  ],
   i18n: {
     defaultLocale: 'en',
     locales: ['en', 'id'],

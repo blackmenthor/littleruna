@@ -28,10 +28,17 @@ const articles = await getArticles();
         <ul class="mt-10 divide-y divide-line border-y border-line">
           {articles.map((article) => (
             <li>
-              <a class="block py-6 hover:text-rose" href={localePath(locale, `/journal/${article.slug}`)}>
-                <time class="eyebrow text-muted" datetime={article.publishedAt}>{article.publishedAt}</time>
-                <h2 class="wordmark mt-2 text-4xl text-ink">{article.title[locale]}</h2>
-                <p class="mt-2 leading-7 text-muted">{article.excerpt[locale]}</p>
+              <a class="grid gap-5 py-6 hover:text-rose sm:grid-cols-[9rem_1fr] sm:items-center" href={localePath(locale, `/journal/${article.slug}`)}>
+                {
+                  article.image && (
+                    <img src={article.image.url} alt="" class="aspect-[4/5] w-full bg-line object-cover" width="360" height="450" />
+                  )
+                }
+                <span>
+                  <time class="eyebrow text-muted" datetime={article.publishedAt}>{article.publishedAt}</time>
+                  <h2 class="wordmark mt-2 text-4xl text-ink">{article.title[locale]}</h2>
+                  <p class="mt-2 leading-7 text-muted">{article.excerpt[locale]}</p>
+                </span>
               </a>
             </li>
           ))}

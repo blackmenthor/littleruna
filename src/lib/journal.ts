@@ -8,6 +8,7 @@ type SanityArticle = {
   excerpt?: { en?: string; id?: string };
   body?: { en?: string; id?: string };
   publishedAt?: string;
+  image?: { alt?: string; asset?: { url?: string } };
 };
 
 const query = `*[_type == "article" && defined(slug.current)] | order(publishedAt desc) {
@@ -15,7 +16,11 @@ const query = `*[_type == "article" && defined(slug.current)] | order(publishedA
   title,
   excerpt,
   body,
-  publishedAt
+  publishedAt,
+  image{
+    alt,
+    asset->{url}
+  }
 }`;
 
 let client: SanityClient | null = null;
@@ -34,6 +39,19 @@ function getClient(): SanityClient | null {
 function text(value: string | undefined, fallback: string): string {
   const trimmed = value?.trim();
   return trimmed ? trimmed : fallback;
+}
+
+function coverImage(image: SanityArticle['image'], alt: string): JournalArticle['image'] {
+  const url = image?.asset?.url?.trim();
+  if (!url) return null;
+  const sized = new URL(url);
+  sized.searchParams.set('auto', 'format');
+  sized.searchParams.set('w', '1600');
+  sized.searchParams.set('fit', 'max');
+  return {
+    url: sized.toString(),
+    alt: image?.alt?.trim() || alt,
+  };
 }
 
 function normalize(doc: SanityArticle): JournalArticle | null {
@@ -55,6 +73,7 @@ function normalize(doc: SanityArticle): JournalArticle | null {
       id: text(doc.body?.id, text(doc.body?.en, '')),
     },
     publishedAt: doc.publishedAt?.slice(0, 10) || new Date().toISOString().slice(0, 10),
+    image: coverImage(doc.image, titleEn),
   };
 }
 

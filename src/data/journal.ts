@@ -6,6 +6,7 @@ export type JournalArticle = {
   excerpt: Record<Locale, string>;
   body: Record<Locale, string>;
   publishedAt: string;
+  image: { url: string; alt: string } | null;
 };
 
 export const fallbackArticles: JournalArticle[] = [
@@ -24,6 +25,7 @@ export const fallbackArticles: JournalArticle[] = [
       id: 'Little Runa tidak mulai dari gulungan kain baru. Sebuah potong mulai dari sesuatu yang sudah pernah dipakai: sprei, baju, selimut.\n\nYang masih bisa diselamatkan dicuci, dilihat, lalu dipotong lagi. Noda dan bagian yang sudah tipis ditinggal. Sisanya menjadi baju, kerah, lengan.\n\nTulisan ini masih contoh. Ganti dari Sanity setelah studionya tersambung.',
     },
     publishedAt: '2026-09-01',
+    image: null,
   },
   {
     slug: 'how-to-ask-for-a-piece',
@@ -40,5 +42,6 @@ export const fallbackArticles: JournalArticle[] = [
       id: 'Kalau sebuah gaya ingin dibuatkan untuk seorang anak, pakai formulir kontak dan tandai sebagai permintaan. Tulis usia atau ukuran yang biasa dipakai, dan hal yang sebaiknya dihindari pada kainnya.\n\nBalasan adalah percakapan, bukan tanda terima. Tidak ada yang dikunci sebelum percakapan itu mengatakan begitu.\n\nTulisan ini masih contoh. Ganti dari Sanity setelah studionya tersambung.',
     },
     publishedAt: '2026-09-08',
+    image: null,
   },
 ];

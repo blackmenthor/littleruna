@@ -1,8 +1,8 @@
 export const site = {
   name: 'Little Runa',
   description: {
-    en: 'Girls’ clothes sewn from revived fabrics, for Europe and Indonesia.',
-    id: 'Baju anak perempuan dari kain yang dihidupkan kembali, untuk Eropa dan Indonesia.',
+    en: 'Little Runa sews girls’ dresses and clothes from revived fabrics: old bedsheets, clothes, and blankets. Made to order for Europe and Indonesia.',
+    id: 'Little Runa menjahit dress dan baju anak perempuan dari kain yang dihidupkan kembali: sprei, baju, dan selimut bekas. Dibuat sesuai permintaan untuk Eropa dan Indonesia.',
   },
 };
 

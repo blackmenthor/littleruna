@@ -103,6 +103,11 @@ const [lead, ...rest] = featured;
           <div class="mt-8 grid gap-8 md:grid-cols-2">
             {articles.map((article) => (
               <a class="border-t border-line pt-4 hover:text-rose" href={localePath(locale, `/journal/${article.slug}`)}>
+                {
+                  article.image && (
+                    <img src={article.image.url} alt="" class="mb-4 aspect-[4/3] w-full bg-line object-cover" width="800" height="600" />
+                  )
+                }
                 <time class="eyebrow text-muted" datetime={article.publishedAt}>{article.publishedAt}</time>
                 <h3 class="wordmark mt-2 text-3xl text-ink">{article.title[locale]}</h3>
                 <p class="mt-2 text-sm leading-6 text-muted">{article.excerpt[locale]}</p>

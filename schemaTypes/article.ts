@@ -36,6 +36,19 @@ export const article = defineType({
       validation: (rule) => rule.required(),
     }),
     localeText('excerpt', 'Excerpt', 'text'),
+    defineField({
+      name: 'image',
+      title: 'Image',
+      type: 'image',
+      options: { hotspot: true },
+      fields: [
+        defineField({
+          name: 'alt',
+          title: 'Alt text',
+          type: 'string',
+        }),
+      ],
+    }),
     localeText('body', 'Body', 'text'),
     defineField({
       name: 'publishedAt',
@@ -45,6 +58,6 @@ export const article = defineType({
     }),
   ],
   preview: {
-    select: { title: 'title.en', subtitle: 'publishedAt' },
+    select: { title: 'title.en', subtitle: 'publishedAt', media: 'image' },
   },
 });
