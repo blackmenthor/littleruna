@@ -3,6 +3,12 @@
   "name": "littleruna",
   "compatibility_date": "2026-09-25",
   "compatibility_flags": ["nodejs_compat"],
+  // The live route *littleruna.com/* stays in the Cloudflare dashboard.
+  // Wrangler only replaces routes when this file lists them, and that PUT
+  // deletes the previous routes on the Worker. Leave `routes` unset.
+  // keep_vars stops a deploy from wiping plain-text variables set in the dashboard.
+  // Secrets are kept either way. Set new ones with `wrangler secret put`.
+  "keep_vars": true,
   "observability": {
     "enabled": false
   }

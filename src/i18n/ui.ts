@@ -1,5 +1,10 @@
 import type { Locale } from './locale';
 
+/**
+ * One full entry per routed locale. de, es, fr, and tr are not here yet.
+ * Adding one is a new entry in this object plus the locale lists. TypeScript
+ * fails a page that reads a key the active locale does not have.
+ */
 export const ui = {
   en: {
     announcement: 'Girls’ clothes sewn from revived fabrics, for Europe and Indonesia.',
@@ -61,6 +66,31 @@ export const ui = {
     photos: 'Photographs',
     emptyJournal: 'No articles yet. Publish one in Sanity and rebuild the site.',
     styleBack: 'All styles',
+    newsletterEyebrow: 'The list',
+    newsletterTitle: 'A note when a new piece is ready.',
+    newsletterText: 'An email, and a country if you want to give one. Little Runa writes rarely. There is no shop on this site yet.',
+    newsletterCountry: 'Country, if you want',
+    newsletterCountryBlank: 'No country',
+    countries: {
+      DE: 'Germany',
+      ES: 'Spain',
+      FR: 'France',
+      TR: 'Turkey',
+      ID: 'Indonesia',
+      other: 'Somewhere else',
+    },
+    newsletterConsent: 'I agree Little Runa may keep this email and write about new pieces. I can ask for it to be deleted.',
+    newsletterSend: 'Join',
+    newsletterSending: 'Joining…',
+    newsletterSent: 'You are on the list. A note will come when there is something to say.',
+    newsletterError: 'The list could not be updated. Try again in a moment.',
+    newsletterNotConfigured: 'The list is not connected yet.',
+    cookieTitle: 'A choice about measurement',
+    cookieText:
+      'Cloudflare Web Analytics runs without a cookie. Google Analytics, and any later Meta or TikTok tag, stay off until you accept.',
+    cookieAccept: 'Accept',
+    cookieReject: 'Reject',
+    cookieSettings: 'Cookie settings',
   },
   id: {
     announcement: 'Baju anak perempuan dari kain yang dihidupkan kembali, untuk Eropa dan Indonesia.',
@@ -122,6 +152,31 @@ export const ui = {
     photos: 'Foto',
     emptyJournal: 'Belum ada artikel. Terbitkan satu di Sanity, lalu bangun ulang situsnya.',
     styleBack: 'Semua gaya',
+    newsletterEyebrow: 'Daftar',
+    newsletterTitle: 'Kabar kalau ada potongan baru.',
+    newsletterText: 'Satu email, dan negara kalau mau disebut. Little Runa jarang menulis. Belum ada toko di situs ini.',
+    newsletterCountry: 'Negara, kalau mau',
+    newsletterCountryBlank: 'Tanpa negara',
+    countries: {
+      DE: 'Jerman',
+      ES: 'Spanyol',
+      FR: 'Prancis',
+      TR: 'Turki',
+      ID: 'Indonesia',
+      other: 'Tempat lain',
+    },
+    newsletterConsent: 'Saya setuju Little Runa menyimpan email ini dan menulis tentang potongan baru. Saya bisa minta email ini dihapus.',
+    newsletterSend: 'Gabung',
+    newsletterSending: 'Mendaftar…',
+    newsletterSent: 'Kamu ada di daftar. Catatan akan datang kalau ada yang ingin disampaikan.',
+    newsletterError: 'Daftar tidak bisa diperbarui. Coba lagi sebentar lagi.',
+    newsletterNotConfigured: 'Daftar belum tersambung.',
+    cookieTitle: 'Pilihan tentang pengukuran',
+    cookieText:
+      'Cloudflare Web Analytics berjalan tanpa kuki. Google Analytics, dan tag Meta atau TikTok kalau nanti ada, tetap mati sampai kamu menerima.',
+    cookieAccept: 'Terima',
+    cookieReject: 'Tolak',
+    cookieSettings: 'Pengaturan kuki',
   },
 } as const;
 

@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { isLocale, type Locale } from '../../i18n/locale';
+import { readSecret } from '../../lib/worker-env';
 
 export const prerender = false;
 
@@ -16,19 +17,6 @@ type Payload = {
   consent: boolean;
   company: string;
 };
-
-async function readSecret(key: keyof Env): Promise<string | undefined> {
-  try {
-    const { env } = await import('cloudflare:workers');
-    const fromWorkers = env?.[key];
-    if (typeof fromWorkers === 'string' && fromWorkers.trim()) return fromWorkers.trim();
-  } catch {
-    // `cloudflare:workers` is empty during a plain Node preview.
-  }
-  const fromFile = import.meta.env[key];
-  if (typeof fromFile === 'string' && fromFile.trim()) return fromFile.trim();
-  return undefined;
-}
 
 function field(data: FormData, key: string): string {
   const value = data.get(key);
@@ -133,6 +121,6 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   return wantsJson
-    ? Response.json({ ok: true })
-    : Response.redirect(new URL(`${back}?sent=1`, request.url), 303);
+    ? Response.json({ ok: true, tracked: true })
+    : Response.redirect(new URL(`${back}?sent=1&lead=1`, request.url), 303);
 };

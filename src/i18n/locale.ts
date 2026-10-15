@@ -1,3 +1,7 @@
+/**
+ * Routed locales. German (de), Spanish (es), French (fr), and Turkish (tr)
+ * are not routed yet. Add a code here, in astro.config.mjs, and in ui.ts together.
+ */
 export const locales = ['en', 'id'] as const;
 export type Locale = (typeof locales)[number];
 

@@ -35,3 +35,7 @@ body {
   letter-spacing: 0.22em;
   text-transform: uppercase;
 }
+
+body:has([data-consent-banner]:not([hidden])) {
+  padding-bottom: 9rem;
+}

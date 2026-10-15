@@ -107,7 +107,7 @@ const errorText =
         });
         const body = await response.json().catch(() => ({}));
         if (response.ok && body.ok) {
-          window.location.search = '?sent=1';
+          window.location.search = body.tracked ? '?sent=1&lead=1' : '?sent=1';
           return;
         }
         const message = body.code === 'not_configured' ? notConfigured : sendError;
