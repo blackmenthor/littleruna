@@ -1,7 +1,9 @@
 ---
-import Header from '../components/Header.astro';
+import ConsentBanner from '../components/ConsentBanner.astro';
 import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
 import { swapLocale, type Locale } from '../i18n/locale';
+import { cfBeaconToken, ga4MeasurementId } from '../lib/analytics';
 import { getSiteSeo } from '../lib/seo';
 import '../styles/global.css';
 
@@ -31,7 +33,7 @@ const jsonLd = {
 ---
 
 <!doctype html>
-<html lang={locale}>
+<html lang={locale} data-ga4={ga4MeasurementId || undefined}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -53,6 +55,25 @@ const jsonLd = {
     <meta name="twitter:description" content={pageDescription} />
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd).replaceAll('<', '\\u003c')} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      window.gtag = gtag;
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        functionality_storage: 'denied',
+        personalization_storage: 'denied',
+        security_storage: 'granted',
+        wait_for_update: 500,
+      });
+      gtag('set', 'ads_data_redaction', true);
+      gtag('set', 'url_passthrough', true);
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -66,5 +87,19 @@ const jsonLd = {
       <slot />
     </main>
     <Footer locale={locale} />
+    <ConsentBanner locale={locale} />
+    {
+      cfBeaconToken && (
+        <script
+          is:inline
+          type="module"
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon={JSON.stringify({ token: cfBeaconToken })}
+        />
+      )
+    }
+    <script>
+      import '../scripts/consent';
+    </script>
   </body>
 </html>

@@ -10,9 +10,11 @@ The site runs without accounts. Homepage, styles, journal, and the contact form 
 | Style photos | `src/assets/styles/` | New photos are added with `scripts/optimize-styles.sh` |
 | Journal | `src/lib/journal.ts` reads Sanity, otherwise `src/data/journal.ts` | `PUBLIC_SANITY_PROJECT_ID` |
 | Contact mail | `src/pages/api/contact.ts` calls `https://api.resend.com/emails` | `RESEND_API_KEY`, `CONTACT_TO_EMAIL`, `CONTACT_FROM_EMAIL` |
-| Hosting | `@astrojs/cloudflare`, config in `wrangler.jsonc` | `npm run deploy` |
+| Waitlist | `src/pages/api/subscribe.ts` calls the Resend contacts API | `RESEND_API_KEY`, `RESEND_AUDIENCE_ID` |
+| Measurement | Beacon and GA4 in `src/layouts/Base.astro`. GA4 waits for Accept. | `PUBLIC_CF_BEACON_TOKEN`, `PUBLIC_GA4_ID` |
+| Hosting | `@astrojs/cloudflare`, config in `wrangler.jsonc` | Push to `main`, or `npm run deploy` |
 
-`PUBLIC_` variables are read while the site is built and baked into the HTML. The three mail variables stay on the server. Do not prefix them with `PUBLIC_`.
+`PUBLIC_` variables are read while the site is built and baked into the HTML. The mail and list variables stay on the server. Do not prefix them with `PUBLIC_`. The full list, including the GitHub secrets and the Cloudflare token permissions, is in the [README](../README.md#environment).
 
 ## 1. Local
 
@@ -53,12 +55,16 @@ If the project id is set and the query fails or returns nothing, the journal is 
 
 ## 3. Resend
 
-1. Create an API key at [resend.com](https://resend.com).
+1. Create an API key at [resend.com](https://resend.com). It has to be allowed to send email and to create contacts. A send-only key will not fill the list.
 2. Verify the domain that will send mail. `CONTACT_FROM_EMAIL` must use that domain, for example `Little Runa <hello@your-domain.com>`.
 3. `CONTACT_TO_EMAIL` is the inbox that receives questions and piece requests.
-4. Put the three values in `.env` for `astro dev`.
+4. Create a **segment** (Resend used to call these audiences) for the waitlist. Put its id in `RESEND_AUDIENCE_ID`.
+5. Create a string contact property named `country`. The form stores Germany, Spain, France, Turkey, Indonesia, or “somewhere else” there. Without the property, the email is still saved.
+6. Put the values in `.env` for `astro dev`. On the Worker they are secrets, not `PUBLIC_` build variables.
 
-The form posts to `/api/contact`. It asks for a name, email, region (Europe, Indonesia, or somewhere else), whether the note is a question or a request, a message, and consent. A hidden company field is ignored when filled, so simple bots get a fake success.
+The contact form posts to `/api/contact`. It asks for a name, email, region (Europe, Indonesia, or somewhere else), whether the note is a question or a request, a message, and consent. A hidden company field is ignored when filled, so simple bots get a fake success.
+
+The list form is on the home page and in the footer. It posts to `/api/subscribe` with an email, an optional country, consent, and the same kind of hidden company field. A real signup can send a GA4 `sign_up` event, and a real contact send can send `generate_lead`, only after the visitor has accepted analytics.
 
 ## 4. Cloudflare
 
@@ -73,13 +79,18 @@ npm run deploy
 
 `npm run deploy` runs `wrangler deploy --config dist/server/wrangler.json`. The first time, Wrangler asks you to log in and will create a worker named `littleruna`.
 
-Set the mail values as secrets, not as `PUBLIC_` build variables:
+Set the mail and list values as secrets, not as `PUBLIC_` build variables:
 
 ```sh
 npx wrangler secret put RESEND_API_KEY
 npx wrangler secret put CONTACT_TO_EMAIL
 npx wrangler secret put CONTACT_FROM_EMAIL
+npx wrangler secret put RESEND_AUDIENCE_ID
 ```
+
+`wrangler.jsonc` does not list routes, so a deploy leaves the dashboard route `*littleruna.com/*` alone. It also sets `keep_vars`, so plain-text variables added in the dashboard are not wiped. Secrets are kept either way.
+
+Pushes to `main` deploy from GitHub Actions once `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` exist as repository secrets. Pull requests only build. The token permissions are in the [README](../README.md#environment).
 
 In the Cloudflare build settings, if the build happens there instead of on your machine:
 
@@ -91,6 +102,8 @@ Add these as **build** environment variables, because they are compiled into the
 - `PUBLIC_SITE_URL` — the real origin, such as `https://littleruna.com`
 - `PUBLIC_SANITY_PROJECT_ID`
 - `PUBLIC_SANITY_DATASET` — `production`
+- `PUBLIC_CF_BEACON_TOKEN` — Web Analytics site token. In the dashboard, set the site to manual snippet installation so the beacon is not injected twice. Leave it empty to skip the beacon.
+- `PUBLIC_GA4_ID` — measurement id such as `G-XXXXXXXX`. Leave it empty to skip Google Analytics. The tag loads only after Accept.
 
 After changing a `PUBLIC_` variable or publishing an article, build again. Secrets can change without a rebuild.
 
@@ -123,6 +136,6 @@ Style names and the short descriptions are in `src/lib/styles.ts`. The order on 
 | `/en/journal` | Articles |
 | `/en/about` | Story |
 | `/en/contact` | Form |
-| `/en/privacy` | What the form stores |
+| `/en/privacy` | What the form, the list, and the measurements store |
 
 There is no cart. A request is an email.

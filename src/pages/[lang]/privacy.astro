@@ -12,25 +12,84 @@ if (!isLocale(lang)) return Astro.redirect('/en');
 const locale: Locale = lang;
 const copy = t(locale);
 
-const paragraphs =
+const sections =
   locale === 'en'
     ? [
-        'The contact form sends your name, email address, region, and message to Little Runa so a reply can be written. The message is delivered by Resend and is kept in that provider’s logs according to their retention.',
-        'The site does not create an account and does not take payment. Articles are published by the studio; they do not collect anything from a reader.',
-        'If you want a message deleted, write again from the same address and say so.',
+        {
+          heading: 'Messages',
+          paragraphs: [
+            'The contact form sends your name, email address, region, and message to Little Runa so a reply can be written. Resend delivers the message and keeps it in their logs for their own retention period.',
+            'If you have accepted analytics, a successful send is also counted in Google Analytics as generate_lead. If you have not accepted, that count is not sent.',
+          ],
+        },
+        {
+          heading: 'The list',
+          paragraphs: [
+            'The signup on the home page and in the footer stores your email address and, if you chose one, your country. The contact is kept at Resend, in the list Little Runa uses for occasional notes about new pieces. The checkbox is the consent for those notes.',
+            'There is no account. To be taken off the list, or to have a message deleted, write from the same address and say so.',
+          ],
+        },
+        {
+          heading: 'Measurement',
+          paragraphs: [
+            'A cookie named lr_consent remembers Accept or Reject for about six months. It exists so the question is not asked on every page. You can change it from Cookie settings in the footer. Reject is the same kind of button as Accept.',
+            'Cloudflare Web Analytics runs without that choice. It does not use a cookie and it is not used for ads. It sends a page view and timing to Cloudflare. This is the cookieless beacon, which the German TDDDG and the GDPR allow us to load before a choice.',
+            'Google Analytics 4 stays off until you accept. Before that, Consent Mode tells Google that analytics storage and ad storage are denied, and the Google tag is not loaded. If you accept, Google may store cookies and receive the page you viewed, plus sign_up when you join the list and generate_lead when the contact form is sent. If you reject, Google is not loaded. A choice you have not made yet can hold one of those events until you accept. Reject drops it.',
+            'Meta and TikTok are not on this site. If a tag like that is added later, it will wait for the same Accept. It will not be placed in the page for everyone.',
+          ],
+        },
+        {
+          heading: 'What this site does not do',
+          paragraphs: ['The site does not create an account and does not take payment.'],
+        },
       ]
     : [
-        'Formulir kontak mengirim nama, alamat email, wilayah, dan pesan ke Little Runa supaya bisa dibalas. Pesan diantar oleh Resend dan tersimpan di log penyedia itu sesuai masa simpan mereka.',
-        'Situs ini tidak membuat akun dan tidak menerima pembayaran. Artikel diterbitkan dari studio; artikel tidak mengumpulkan apa pun dari pembaca.',
-        'Kalau sebuah pesan ingin dihapus, tulis lagi dari alamat yang sama dan sampaikan.',
+        {
+          heading: 'Pesan',
+          paragraphs: [
+            'Formulir kontak mengirim nama, alamat email, wilayah, dan pesan ke Little Runa supaya bisa dibalas. Resend mengantar pesan itu dan menyimpannya di log mereka sesuai masa simpan mereka.',
+            'Kalau kamu menerima analitik, pengiriman yang berhasil juga dihitung di Google Analytics sebagai generate_lead. Kalau kamu belum menerima, hitungan itu tidak dikirim.',
+          ],
+        },
+        {
+          heading: 'Daftar',
+          paragraphs: [
+            'Pendaftaran di beranda dan di kaki halaman menyimpan alamat email, dan negara kalau kamu memilihnya. Kontak itu disimpan di Resend, di daftar yang dipakai Little Runa untuk catatan sesekali tentang potongan baru. Centang persetujuan adalah izin untuk catatan itu.',
+            'Tidak ada akun. Kalau ingin dikeluarkan dari daftar, atau sebuah pesan ingin dihapus, tulis dari alamat yang sama dan sampaikan.',
+          ],
+        },
+        {
+          heading: 'Pengukuran',
+          paragraphs: [
+            'Kuki bernama lr_consent mengingat Terima atau Tolak selama sekitar enam bulan. Kuki itu ada supaya pertanyaan tidak muncul di setiap halaman. Kamu bisa mengubahnya lewat Pengaturan kuki di kaki halaman. Tolak adalah tombol yang sama jenisnya dengan Terima.',
+            'Cloudflare Web Analytics berjalan tanpa pilihan itu. Ia tidak memakai kuki dan tidak dipakai untuk iklan. Ia mengirim tampilan halaman dan waktu muat ke Cloudflare. Ini suar tanpa kuki, yang boleh dimuat sebelum ada pilihan menurut TDDDG Jerman dan GDPR.',
+            'Google Analytics 4 mati sampai kamu menerima. Sebelum itu, Consent Mode memberi tahu Google bahwa penyimpanan analitik dan iklan ditolak, dan tag Google tidak dimuat. Kalau kamu menerima, Google boleh menyimpan kuki dan menerima halaman yang kamu lihat, plus sign_up saat kamu bergabung ke daftar dan generate_lead saat formulir kontak terkirim. Kalau kamu menolak, Google tidak dimuat. Pilihan yang belum dibuat bisa menahan salah satu peristiwa itu sampai kamu menerima. Tolak membuangnya.',
+            'Meta dan TikTok tidak ada di situs ini. Kalau tag semacam itu ditambahkan nanti, tag itu menunggu Terima yang sama. Tag itu tidak ditaruh di halaman untuk semua orang.',
+          ],
+        },
+        {
+          heading: 'Yang tidak dilakukan situs ini',
+          paragraphs: ['Situs ini tidak membuat akun dan tidak menerima pembayaran.'],
+        },
       ];
 ---
 
 <Base locale={locale} title={copy.privacyTitle}>
   <article class="mx-auto max-w-2xl px-4 py-12 md:px-6">
     <h1 class="wordmark text-5xl">{copy.privacyTitle}</h1>
-    <div class="mt-8 space-y-5 leading-8">
-      {paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+    <div class="mt-8 space-y-8">
+      {
+        sections.map((section) => (
+          <section>
+            <h2 class="eyebrow">{section.heading}</h2>
+            <div class="mt-3 space-y-4 leading-8">
+              {section.paragraphs.map((paragraph) => (
+                <p>{paragraph}</p>
+              ))}
+            </div>
+          </section>
+        ))
+      }
     </div>
   </article>
 </Base>

@@ -1,0 +1,38 @@
+---
+import type { Locale } from '../i18n/locale';
+import { localePath } from '../i18n/locale';
+import { t } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const copy = t(locale);
+---
+
+<div
+  data-consent-banner
+  hidden
+  class="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-paper/95 backdrop-blur-sm"
+  role="region"
+  aria-labelledby="cookie-title"
+>
+  <div class="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-4 md:flex-row md:items-end md:justify-between md:px-6">
+    <div class="max-w-2xl">
+      <p id="cookie-title" class="eyebrow">{copy.cookieTitle}</p>
+      <p class="mt-2 text-sm leading-6 text-muted">{copy.cookieText}</p>
+      <a class="mt-2 inline-block text-sm underline decoration-line underline-offset-4 hover:text-rose" href={localePath(locale, '/privacy')}>
+        {copy.privacy}
+      </a>
+    </div>
+    <div class="flex gap-3">
+      <button class="eyebrow min-w-28 border border-ink px-5 py-3 hover:bg-ink hover:text-paper" type="button" data-consent-reject>
+        {copy.cookieReject}
+      </button>
+      <button class="eyebrow min-w-28 border border-ink px-5 py-3 hover:bg-ink hover:text-paper" type="button" data-consent-accept>
+        {copy.cookieAccept}
+      </button>
+    </div>
+  </div>
+</div>

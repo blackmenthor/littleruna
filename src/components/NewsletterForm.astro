@@ -1,0 +1,85 @@
+---
+import type { Locale } from '../i18n/locale';
+import { newsletterCountries } from '../lib/newsletter';
+import { t } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const copy = t(locale);
+const joined = Astro.url.searchParams.get('joined') === '1';
+const listError = Astro.url.searchParams.get('list');
+const errorText =
+  listError === 'not_configured'
+    ? copy.newsletterNotConfigured
+    : listError === 'invalid' || listError === 'send'
+      ? copy.newsletterError
+      : '';
+---
+
+{
+  joined ? (
+    <p class="text-sm leading-6">{copy.newsletterSent}</p>
+  ) : (
+    <form
+      class="space-y-4"
+      method="post"
+      action="/api/subscribe"
+      data-newsletter-form
+      data-send={copy.newsletterSend}
+      data-sending={copy.newsletterSending}
+      data-error={copy.newsletterError}
+      data-not-configured={copy.newsletterNotConfigured}
+    >
+      <input type="hidden" name="locale" value={locale} />
+      <p class="absolute -left-[9999px] h-0 w-0 overflow-hidden" aria-hidden="true">
+        <label>
+          {copy.honeypot}
+          <input type="text" name="company" tabindex="-1" autocomplete="off" />
+        </label>
+      </p>
+      <div data-newsletter-fields class="space-y-4">
+        <label class="block">
+          <span class="eyebrow text-muted">{copy.email}</span>
+          <input
+            class="mt-2 w-full border border-line bg-transparent px-3 py-3 outline-none focus:border-ink"
+            type="email"
+            name="email"
+            required
+            maxlength="160"
+            autocomplete="email"
+          />
+        </label>
+        <label class="block">
+          <span class="eyebrow text-muted">{copy.newsletterCountry}</span>
+          <select class="mt-2 w-full border border-line bg-transparent px-3 py-3 outline-none focus:border-ink" name="country">
+            <option value="">{copy.newsletterCountryBlank}</option>
+            {newsletterCountries.map((code) => (
+              <option value={code}>{copy.countries[code]}</option>
+            ))}
+          </select>
+        </label>
+        <label class="flex items-start gap-3 text-sm leading-6">
+          <input class="mt-1" type="checkbox" name="consent" required />
+          <span>{copy.newsletterConsent}</span>
+        </label>
+        <p class="text-sm text-rose" data-newsletter-error role="alert" hidden>
+          {errorText}
+        </p>
+        {errorText && <p class="text-sm text-rose">{errorText}</p>}
+        <button class="eyebrow border border-ink px-5 py-3 hover:bg-ink hover:text-paper" type="submit" data-newsletter-submit>
+          {copy.newsletterSend}
+        </button>
+      </div>
+      <p class="text-sm leading-6" data-newsletter-success hidden>
+        {copy.newsletterSent}
+      </p>
+    </form>
+  )
+}
+
+<script>
+  import '../scripts/newsletter';
+</script>
