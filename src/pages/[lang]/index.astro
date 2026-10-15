@@ -1,5 +1,6 @@
 ---
 import { Image } from 'astro:assets';
+import Newsletter from '../../components/Newsletter.astro';
 import Base from '../../layouts/Base.astro';
 import { isLocale, localePath, type Locale } from '../../i18n/locale';
 import { t } from '../../i18n/ui';
@@ -92,6 +93,12 @@ const [lead, ...rest] = featured;
         ))
       }
     </ul>
+  </section>
+
+  <section class="border-t border-line">
+    <div class="mx-auto max-w-6xl px-4 py-16 md:px-6">
+      <Newsletter locale={locale} />
+    </div>
   </section>
 
   {

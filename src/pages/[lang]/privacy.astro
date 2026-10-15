@@ -12,25 +12,135 @@ if (!isLocale(lang)) return Astro.redirect('/en');
 const locale: Locale = lang;
 const copy = t(locale);
 
-const paragraphs =
+const sections =
   locale === 'en'
     ? [
-        'The contact form sends your name, email address, region, and message to Little Runa so a reply can be written. The message is delivered by Resend and is kept in that provider’s logs according to their retention.',
-        'The site does not create an account and does not take payment. Articles are published by the studio; they do not collect anything from a reader.',
-        'If you want a message deleted, write again from the same address and say so.',
+        {
+          title: 'Contact form',
+          paragraphs: [
+            'The contact form sends your name, email address, region, and message to Little Runa so a reply can be written. You tick a box to agree to that reply. The message is delivered by Resend and kept in that provider’s logs according to their retention. That box is not a newsletter signup.',
+          ],
+        },
+        {
+          title: 'Waitlist',
+          paragraphs: [
+            'The waitlist sends your email address, and a country if you chose one, to a contact list kept by Resend. The country is stored under a contact property named country when that property exists. Little Runa uses the list to write about new pieces. The box on that form is the agreement for those emails. It is separate from cookies. To leave the list, write from the same address and say so.',
+          ],
+        },
+        {
+          title: 'Cookies and storage on your device',
+          paragraphs: [
+            'If you are in Germany or elsewhere in the EU, the GDPR and the TDDDG require a choice before non-essential storage on your device. Until you choose, that storage stays off.',
+            'A necessary cookie, lr_consent, remembers the choice for about six months. It is not used to follow you, and it does not need its own opt-in.',
+            'A short-lived cookie, lr_lead, is set only after a contact note or a waitlist signup succeeds. It lets the page record that event in analytics if you have allowed analytics, then it expires within a few minutes.',
+          ],
+        },
+        {
+          title: 'Cloudflare Web Analytics',
+          paragraphs: [
+            'A cookieless beacon from Cloudflare may count a page view: the page, the referrer, a coarse country, and the kind of device. The beacon does not use cookies, local storage, or similar storage on your device, and it does not identify you for ads. It can load without a choice. It is included only when a site token is configured.',
+          ],
+        },
+        {
+          title: 'Google Analytics',
+          paragraphs: [
+            'Google Analytics 4 loads only after you allow Analytics. Before that, the Google tag is not requested. Consent Mode v2 starts with analytics storage and advertising storage denied, so nothing is written for Google until you allow Analytics.',
+            'A successful contact note can send a generate_lead event. A waitlist signup can send generate_lead and sign_up. Those events do not include your email address, and they are sent only when Analytics is allowed. The tag is not used to personalise ads.',
+          ],
+        },
+        {
+          title: 'Advertising tags',
+          paragraphs: [
+            'No Meta or TikTok tag is installed. The Marketing choice is saved so that, if one is added later, it loads only after you allow Marketing.',
+          ],
+        },
+        {
+          title: 'Changing your mind',
+          paragraphs: [
+            'Use Cookie settings in the footer, or the button below, to change the choice. To delete a message or leave the waitlist, write again from the same address and say so.',
+          ],
+        },
+        {
+          title: 'What this site does not do',
+          paragraphs: [
+            'The site does not create an account and does not take payment. Articles do not collect anything from a reader.',
+          ],
+        },
       ]
     : [
-        'Formulir kontak mengirim nama, alamat email, wilayah, dan pesan ke Little Runa supaya bisa dibalas. Pesan diantar oleh Resend dan tersimpan di log penyedia itu sesuai masa simpan mereka.',
-        'Situs ini tidak membuat akun dan tidak menerima pembayaran. Artikel diterbitkan dari studio; artikel tidak mengumpulkan apa pun dari pembaca.',
-        'Kalau sebuah pesan ingin dihapus, tulis lagi dari alamat yang sama dan sampaikan.',
+        {
+          title: 'Formulir kontak',
+          paragraphs: [
+            'Formulir kontak mengirim nama, alamat email, wilayah, dan pesan ke Little Runa supaya bisa dibalas. Kamu mencentang kotak untuk menyetujui balasan itu. Pesan diantar oleh Resend dan tersimpan di log penyedia itu sesuai masa simpan mereka. Kotak itu bukan pendaftaran kabar.',
+          ],
+        },
+        {
+          title: 'Daftar tunggu',
+          paragraphs: [
+            'Daftar tunggu mengirim alamat email, dan negara kalau kamu memilihnya, ke daftar kontak yang disimpan Resend. Negara disimpan sebagai properti kontak bernama country kalau properti itu ada. Little Runa memakai daftar itu untuk menulis tentang potongan baru. Kotak di formulir itu adalah persetujuan untuk email tersebut. Kotak itu terpisah dari cookie. Untuk keluar dari daftar, tulis dari alamat yang sama dan sampaikan.',
+          ],
+        },
+        {
+          title: 'Cookie dan penyimpanan di perangkatmu',
+          paragraphs: [
+            'Kalau kamu di Jerman atau di tempat lain di Uni Eropa, GDPR dan TDDDG meminta pilihan sebelum penyimpanan yang tidak perlu di perangkatmu. Sebelum kamu memilih, penyimpanan itu tetap mati.',
+            'Cookie yang perlu, lr_consent, mengingat pilihan itu sekitar enam bulan. Cookie itu tidak dipakai untuk mengikutimu, dan tidak perlu izin terpisah.',
+            'Cookie yang singkat, lr_lead, dipasang hanya setelah catatan kontak atau pendaftaran daftar tunggu berhasil. Cookie itu mengizinkan halaman mencatat peristiwa itu di analitik kalau kamu sudah mengizinkan analitik, lalu kedaluwarsa dalam beberapa menit.',
+          ],
+        },
+        {
+          title: 'Cloudflare Web Analytics',
+          paragraphs: [
+            'Suar tanpa cookie dari Cloudflare boleh menghitung sebuah halaman: halamannya, perujuk, negara secara kasar, dan jenis perangkat. Suar itu tidak memakai cookie, penyimpanan lokal, atau penyimpanan serupa di perangkatmu, dan tidak mengenali kamu untuk iklan. Suar itu boleh dimuat tanpa pilihan. Suar itu hanya disertakan kalau token situs sudah diisi.',
+          ],
+        },
+        {
+          title: 'Google Analytics',
+          paragraphs: [
+            'Google Analytics 4 hanya dimuat setelah kamu mengizinkan Analitik. Sebelum itu, tag Google tidak diminta. Consent Mode v2 mulai dengan penyimpanan analitik dan penyimpanan iklan yang ditolak, jadi tidak ada yang ditulis untuk Google sampai kamu mengizinkan Analitik.',
+            'Catatan kontak yang berhasil bisa mengirim peristiwa generate_lead. Pendaftaran daftar tunggu bisa mengirim generate_lead dan sign_up. Peristiwa itu tidak memuat alamat emailmu, dan hanya dikirim kalau Analitik diizinkan. Tag itu tidak dipakai untuk mempersonalisasi iklan.',
+          ],
+        },
+        {
+          title: 'Tag iklan',
+          paragraphs: [
+            'Tidak ada tag Meta atau TikTok yang dipasang. Pilihan Pemasaran disimpan supaya, kalau nanti ada yang ditambahkan, tag itu hanya dimuat setelah kamu mengizinkan Pemasaran.',
+          ],
+        },
+        {
+          title: 'Mengubah pikiran',
+          paragraphs: [
+            'Pakai Pengaturan cookie di kaki halaman, atau tombol di bawah, untuk mengubah pilihan. Untuk menghapus pesan atau keluar dari daftar tunggu, tulis lagi dari alamat yang sama dan sampaikan.',
+          ],
+        },
+        {
+          title: 'Yang tidak dilakukan situs ini',
+          paragraphs: [
+            'Situs ini tidak membuat akun dan tidak menerima pembayaran. Artikel tidak mengumpulkan apa pun dari pembaca.',
+          ],
+        },
       ];
 ---
 
 <Base locale={locale} title={copy.privacyTitle}>
   <article class="mx-auto max-w-2xl px-4 py-12 md:px-6">
     <h1 class="wordmark text-5xl">{copy.privacyTitle}</h1>
-    <div class="mt-8 space-y-5 leading-8">
-      {paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+    <div class="mt-10 space-y-10">
+      {
+        sections.map((section) => (
+          <section>
+            <h2 class="eyebrow">{section.title}</h2>
+            <div class="mt-3 space-y-4 leading-8">
+              {section.paragraphs.map((paragraph) => (
+                <p>{paragraph}</p>
+              ))}
+            </div>
+          </section>
+        ))
+      }
     </div>
+    <button class="eyebrow mt-10 border border-ink px-5 py-3 hover:bg-ink hover:text-paper" type="button" data-consent-open>
+      {copy.cookieSettings}
+    </button>
   </article>
 </Base>

@@ -10,7 +10,9 @@ The site runs without accounts. Homepage, styles, journal, and the contact form 
 | Style photos | `src/assets/styles/` | New photos are added with `scripts/optimize-styles.sh` |
 | Journal | `src/lib/journal.ts` reads Sanity, otherwise `src/data/journal.ts` | `PUBLIC_SANITY_PROJECT_ID` |
 | Contact mail | `src/pages/api/contact.ts` calls `https://api.resend.com/emails` | `RESEND_API_KEY`, `CONTACT_TO_EMAIL`, `CONTACT_FROM_EMAIL` |
-| Hosting | `@astrojs/cloudflare`, config in `wrangler.jsonc` | `npm run deploy` |
+| Waitlist | `src/pages/api/newsletter.ts` calls the Resend Contacts API | `RESEND_API_KEY`, `RESEND_AUDIENCE_ID` |
+| Analytics | Beacon and GA4 in `src/components/Analytics.astro`. GA4 waits for consent. | `PUBLIC_CF_BEACON_TOKEN`, `PUBLIC_GA4_ID` |
+| Hosting | `@astrojs/cloudflare`, config in `wrangler.jsonc`. GitHub Actions deploys pushes to `main`. | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` |
 
 `PUBLIC_` variables are read while the site is built and baked into the HTML. The three mail variables stay on the server. Do not prefix them with `PUBLIC_`.
 
@@ -56,9 +58,17 @@ If the project id is set and the query fails or returns nothing, the journal is 
 1. Create an API key at [resend.com](https://resend.com).
 2. Verify the domain that will send mail. `CONTACT_FROM_EMAIL` must use that domain, for example `Little Runa <hello@your-domain.com>`.
 3. `CONTACT_TO_EMAIL` is the inbox that receives questions and piece requests.
-4. Put the three values in `.env` for `astro dev`.
+4. Put the values in `.env` for `astro dev`. `RESEND_AUDIENCE_ID` is the audience or segment the waitlist writes to.
 
-The form posts to `/api/contact`. It asks for a name, email, region (Europe, Indonesia, or somewhere else), whether the note is a question or a request, a message, and consent. A hidden company field is ignored when filled, so simple bots get a fake success.
+The form posts to `/api/contact`. It asks for a name, email, region (Europe, Indonesia, or somewhere else), whether the note is a question or a request, a message, and consent. A hidden company field is ignored when filled, so simple bots get a fake success. A real success can send a GA4 `generate_lead` event, and only after analytics consent.
+
+The waitlist on the home page and in the footer posts to `/api/newsletter`. It asks for an email, an optional country, and consent to be emailed. The same honeypot applies. Contacts are created with the Resend Contacts API and added to `RESEND_AUDIENCE_ID` (an audience id, or a segment id now that Resend has renamed audiences). If that call is refused because the account still expects the old audiences path, the endpoint tries `POST /audiences/:id/contacts`. Country is sent as the contact property `country`. Create that property in Resend when you want it stored. A real signup can send GA4 `generate_lead` and `sign_up`, again only after analytics consent.
+
+`RESEND_AUDIENCE_ID` is a worker secret, same as the mail values:
+
+```sh
+npx wrangler secret put RESEND_AUDIENCE_ID
+```
 
 ## 4. Cloudflare
 
@@ -77,6 +87,7 @@ Set the mail values as secrets, not as `PUBLIC_` build variables:
 
 ```sh
 npx wrangler secret put RESEND_API_KEY
+npx wrangler secret put RESEND_AUDIENCE_ID
 npx wrangler secret put CONTACT_TO_EMAIL
 npx wrangler secret put CONTACT_FROM_EMAIL
 ```
@@ -93,6 +104,13 @@ Add these as **build** environment variables, because they are compiled into the
 - `PUBLIC_SANITY_DATASET` — `production`
 
 After changing a `PUBLIC_` variable or publishing an article, build again. Secrets can change without a rebuild.
+
+Also set these as build variables when you want them in the deployed pages:
+
+- `PUBLIC_CF_BEACON_TOKEN` — Cloudflare Web Analytics site token. In the Web Analytics dashboard, choose **Enable with JS Snippet installation**. Automatic injection does not show on this Worker.
+- `PUBLIC_GA4_ID` — GA4 measurement id. The tag stays unloaded until a visitor allows Analytics.
+
+GitHub Actions (`.github/workflows/ci.yml`) builds every pull request and, on a push to `main`, runs `npm run deploy`. That deploy needs the repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. The permissions and the full variable list are in the README. The workflow does not assume the secrets exist: the deploy step fails and names them until they are set. Worker secrets are still set with `wrangler secret put`, not as GitHub secrets.
 
 ### Domain
 
