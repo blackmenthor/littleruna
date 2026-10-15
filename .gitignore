@@ -9,4 +9,4 @@ dist/
 .DS_Store
 
 # Camera originals. The site uses the resized copies in src/assets/styles.
-Styles/
+/Styles/
