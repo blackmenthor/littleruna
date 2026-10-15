@@ -1,0 +1,150 @@
+---
+import type { Locale } from '../i18n/locale';
+import { localePath } from '../i18n/locale';
+import { consentCopy } from '../i18n/consent';
+import { t } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const copy = consentCopy(locale);
+const ui = t(locale);
+---
+
+<div
+  id="consent-banner"
+  class="fixed inset-x-0 bottom-0 z-50 hidden max-h-[85vh] overflow-y-auto border-t border-line bg-paper shadow-[0_-12px_40px_rgba(36,31,28,0.08)]"
+  role="dialog"
+  aria-labelledby="consent-title"
+  aria-describedby="consent-body"
+  hidden
+>
+  <div class="mx-auto max-w-6xl px-4 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:px-6">
+    <p id="consent-title" class="eyebrow text-rose">{copy.title}</p>
+    <p id="consent-body" class="mt-2 max-w-2xl text-sm leading-6 text-ink">{copy.body}</p>
+    <p class="mt-2 max-w-2xl text-sm leading-6 text-muted">
+      {copy.necessary}
+      <a class="ml-2 underline decoration-line underline-offset-4 hover:text-rose" href={localePath(locale, '/privacy')}>
+        {ui.privacy}
+      </a>
+    </p>
+    <div class="mt-4 flex flex-wrap gap-3">
+      <button class="eyebrow border border-ink px-5 py-3 hover:bg-ink hover:text-paper" type="button" data-consent-action="accept">
+        {copy.accept}
+      </button>
+      <button class="eyebrow border border-line px-5 py-3 hover:border-ink" type="button" data-consent-action="reject">
+        {copy.reject}
+      </button>
+      <button class="eyebrow border border-line px-5 py-3 hover:border-ink" type="button" data-consent-action="choose">
+        {copy.choose}
+      </button>
+    </div>
+    <div class="mt-5 grid gap-4 border-t border-line pt-5 sm:grid-cols-2" data-consent-panel hidden>
+      <label class="flex items-start gap-3 text-sm leading-6">
+        <input class="mt-1" type="checkbox" data-consent-analytics />
+        <span>
+          <span class="eyebrow block text-ink">{copy.analytics}</span>
+          <span class="mt-1 block text-muted">{copy.analyticsHelp}</span>
+        </span>
+      </label>
+      <label class="flex items-start gap-3 text-sm leading-6">
+        <input class="mt-1" type="checkbox" data-consent-marketing />
+        <span>
+          <span class="eyebrow block text-ink">{copy.marketing}</span>
+          <span class="mt-1 block text-muted">{copy.marketingHelp}</span>
+        </span>
+      </label>
+      <div>
+        <button class="eyebrow border border-ink px-5 py-3 hover:bg-ink hover:text-paper" type="button" data-consent-action="save">
+          {copy.save}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { consumeLead, readChoice, track, writeChoice } from '../scripts/consent';
+
+  const banner = document.querySelector('#consent-banner');
+  const panel = banner?.querySelector('[data-consent-panel]');
+  const analyticsBox = banner?.querySelector('[data-consent-analytics]');
+  const marketingBox = banner?.querySelector('[data-consent-marketing]');
+
+  function boxes(): { analytics: HTMLInputElement; marketing: HTMLInputElement } | null {
+    if (!(analyticsBox instanceof HTMLInputElement) || !(marketingBox instanceof HTMLInputElement)) return null;
+    return { analytics: analyticsBox, marketing: marketingBox };
+  }
+
+  function syncBoxes(): void {
+    const inputs = boxes();
+    if (!inputs) return;
+    const saved = readChoice();
+    inputs.analytics.checked = saved?.analytics ?? false;
+    inputs.marketing.checked = saved?.marketing ?? false;
+  }
+
+  function setOpen(open: boolean, focus = false): void {
+    if (!(banner instanceof HTMLElement)) return;
+    banner.hidden = !open;
+    banner.classList.toggle('hidden', !open);
+    if (!open || !focus) return;
+    const accept = banner.querySelector('[data-consent-action="accept"]');
+    if (accept instanceof HTMLElement) accept.focus();
+  }
+
+  function showPanel(show: boolean): void {
+    if (panel instanceof HTMLElement) panel.hidden = !show;
+  }
+
+  if (banner instanceof HTMLElement) {
+    syncBoxes();
+    if (!readChoice()) setOpen(true);
+
+    banner.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const action = target.closest('[data-consent-action]')?.getAttribute('data-consent-action');
+      if (action === 'accept') {
+        writeChoice({ analytics: true, marketing: true });
+        setOpen(false);
+        return;
+      }
+      if (action === 'reject') {
+        writeChoice({ analytics: false, marketing: false });
+        setOpen(false);
+        return;
+      }
+      if (action === 'choose') {
+        syncBoxes();
+        showPanel(true);
+        return;
+      }
+      if (action === 'save') {
+        const inputs = boxes();
+        if (!inputs) return;
+        writeChoice({ analytics: inputs.analytics.checked, marketing: inputs.marketing.checked });
+        setOpen(false);
+      }
+    });
+  }
+
+  document.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof Element) || !target.closest('[data-consent-open]')) return;
+    event.preventDefault();
+    syncBoxes();
+    showPanel(true);
+    setOpen(true, true);
+  });
+
+  if (consumeLead('newsletter')) {
+    track('generate_lead', { method: 'newsletter' });
+    track('sign_up', { method: 'newsletter' });
+  }
+  if (consumeLead('contact')) {
+    track('generate_lead', { method: 'contact' });
+  }
+</script>

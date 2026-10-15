@@ -1,0 +1,64 @@
+# Builds on pull requests and on pushes to main.
+# Deploys the existing `littleruna` Worker only on a push to main.
+#
+# Repository secrets (Settings → Secrets and variables → Actions → Secrets).
+# The deploy step fails with a clear error until both exist:
+#   CLOUDFLARE_API_TOKEN
+#   CLOUDFLARE_ACCOUNT_ID
+#
+# Repository variables (same page → Variables), read while the site is built:
+#   PUBLIC_SITE_URL, PUBLIC_SANITY_PROJECT_ID, PUBLIC_SANITY_DATASET,
+#   PUBLIC_CF_BEACON_TOKEN, PUBLIC_GA4_ID
+#
+# Worker secrets (Resend, contact inbox) are not in GitHub. Set them with
+# `npx wrangler secret put`. A deploy does not erase secrets already stored.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          PUBLIC_SITE_URL: ${{ vars.PUBLIC_SITE_URL || 'https://littleruna.com' }}
+          PUBLIC_SANITY_PROJECT_ID: ${{ vars.PUBLIC_SANITY_PROJECT_ID }}
+          PUBLIC_SANITY_DATASET: ${{ vars.PUBLIC_SANITY_DATASET || 'production' }}
+          PUBLIC_CF_BEACON_TOKEN: ${{ vars.PUBLIC_CF_BEACON_TOKEN }}
+          PUBLIC_GA4_ID: ${{ vars.PUBLIC_GA4_ID }}
+
+      - name: Deploy to Cloudflare
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::Set repository secrets CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID before this deploy can succeed. Token permissions are listed in the README. They are not assumed to exist."
+            exit 1
+          fi
+          npm run deploy

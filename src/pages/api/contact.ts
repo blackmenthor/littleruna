@@ -1,5 +1,8 @@
 import type { APIRoute } from 'astro';
 import { isLocale, type Locale } from '../../i18n/locale';
+import { leadCookie } from '../../lib/lead-cookie';
+import { readSecret } from '../../lib/secrets';
+import { thanksRedirect } from '../../lib/thanks';
 
 export const prerender = false;
 
@@ -16,19 +19,6 @@ type Payload = {
   consent: boolean;
   company: string;
 };
-
-async function readSecret(key: keyof Env): Promise<string | undefined> {
-  try {
-    const { env } = await import('cloudflare:workers');
-    const fromWorkers = env?.[key];
-    if (typeof fromWorkers === 'string' && fromWorkers.trim()) return fromWorkers.trim();
-  } catch {
-    // `cloudflare:workers` is empty during a plain Node preview.
-  }
-  const fromFile = import.meta.env[key];
-  if (typeof fromFile === 'string' && fromFile.trim()) return fromFile.trim();
-  return undefined;
-}
 
 function field(data: FormData, key: string): string {
   const value = data.get(key);
@@ -99,18 +89,18 @@ export const POST: APIRoute = async ({ request }) => {
   const wantsJson = request.headers.get('accept')?.includes('application/json');
   const data = await request.formData();
   const payload = parse(data);
-  const back = `/${payload?.locale ?? 'en'}/contact`;
+  const localeValue = field(data, 'locale');
+  const locale = isLocale(localeValue) ? localeValue : 'en';
+  const back = `/${locale}/contact`;
+  const page = (error?: string, cookie?: string) =>
+    thanksRedirect(request, { locale, kind: 'contact', back, error, cookie });
 
   if (field(data, 'company')) {
-    return wantsJson
-      ? Response.json({ ok: true })
-      : Response.redirect(new URL(`${back}?sent=1`, request.url), 303);
+    return wantsJson ? Response.json({ ok: true }) : page();
   }
 
   if (!payload) {
-    return wantsJson
-      ? Response.json({ ok: false, code: 'invalid' }, { status: 400 })
-      : Response.redirect(new URL(`${back}?error=invalid`, request.url), 303);
+    return wantsJson ? Response.json({ ok: false, code: 'invalid' }, { status: 400 }) : page('invalid');
   }
 
   const apiKey = await readSecret('RESEND_API_KEY');
@@ -118,21 +108,22 @@ export const POST: APIRoute = async ({ request }) => {
   const from = await readSecret('CONTACT_FROM_EMAIL');
 
   if (!apiKey || !to || !from) {
-    return wantsJson
-      ? Response.json({ ok: false, code: 'not_configured' }, { status: 503 })
-      : Response.redirect(new URL(`${back}?error=not_configured`, request.url), 303);
+    return wantsJson ? Response.json({ ok: false, code: 'not_configured' }, { status: 503 }) : page('not_configured');
   }
 
   try {
     await sendMail(payload, apiKey, to, from);
   } catch (error) {
     console.error(error);
-    return wantsJson
-      ? Response.json({ ok: false, code: 'send_failed' }, { status: 502 })
-      : Response.redirect(new URL(`${back}?error=send`, request.url), 303);
+    return wantsJson ? Response.json({ ok: false, code: 'send_failed' }, { status: 502 }) : page('send');
   }
 
-  return wantsJson
-    ? Response.json({ ok: true })
-    : Response.redirect(new URL(`${back}?sent=1`, request.url), 303);
+  const cookie = leadCookie(request, 'contact');
+  if (wantsJson) {
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Set-Cookie': cookie },
+    });
+  }
+  return page(undefined, cookie);
 };

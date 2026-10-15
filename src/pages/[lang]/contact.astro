@@ -11,10 +11,6 @@ const { lang } = Astro.params;
 if (!isLocale(lang)) return Astro.redirect('/en');
 const locale: Locale = lang;
 const copy = t(locale);
-const sent = Astro.url.searchParams.get('sent') === '1';
-const error = Astro.url.searchParams.get('error');
-const errorText =
-  error === 'not_configured' ? copy.notConfigured : error === 'invalid' || error === 'send' ? copy.sendError : '';
 ---
 
 <Base locale={locale} title={copy.contactTitle} description={copy.contactLead}>
@@ -25,14 +21,23 @@ const errorText =
       <p class="mt-4 max-w-md leading-7 text-muted">{copy.contactLead}</p>
     </div>
 
-    {
-      sent ? (
+    <div data-contact>
+      <div data-contact-success hidden>
         <div class="border border-line p-8">
           <h2 class="wordmark text-4xl">{copy.sentTitle}</h2>
           <p class="mt-3 leading-7 text-muted">{copy.sentText}</p>
         </div>
-      ) : (
-        <form class="space-y-5" method="post" action="/api/contact" data-contact-form>
+      </div>
+      <form
+        class="space-y-5"
+        method="post"
+        action="/api/contact"
+        data-contact-form
+        data-msg-sending={copy.sending}
+        data-msg-send={copy.send}
+        data-msg-error={copy.sendError}
+        data-msg-config={copy.notConfigured}
+      >
           <input type="hidden" name="locale" value={locale} />
           <p class="absolute -left-[9999px] h-0 w-0 overflow-hidden" aria-hidden="true">
             <label>
@@ -74,29 +79,29 @@ const errorText =
             <input class="mt-1" type="checkbox" name="consent" required />
             <span>{copy.consent}</span>
           </label>
-          <p class="text-sm text-rose" data-form-error hidden>{errorText}</p>
-          {errorText && <p class="text-sm text-rose">{errorText}</p>}
+          <p class="text-sm text-rose" data-form-error hidden></p>
           <button class="eyebrow border border-ink px-5 py-3 hover:bg-ink hover:text-paper" type="submit" data-submit>
             {copy.send}
           </button>
         </form>
-      )
-    }
+    </div>
   </section>
 </Base>
 
-<script define:vars={{ sending: copy.sending, send: copy.send, notConfigured: copy.notConfigured, sendError: copy.sendError }}>
+<script>
+  import { consumeLead, track } from '../../scripts/consent';
+
   const form = document.querySelector('[data-contact-form]');
-  if (!(form instanceof HTMLFormElement)) {
-    // The success state has no form.
-  } else {
+  if (form instanceof HTMLFormElement && form.dataset.bound !== 'true') {
+    form.dataset.bound = 'true';
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       const button = form.querySelector('[data-submit]');
       const error = form.querySelector('[data-form-error]');
+      const company = form.querySelector('input[name="company"]');
       if (button instanceof HTMLButtonElement) {
         button.disabled = true;
-        button.textContent = sending;
+        button.textContent = form.dataset.msgSending ?? '';
       }
       if (error instanceof HTMLElement) error.hidden = true;
       try {
@@ -106,24 +111,36 @@ const errorText =
           headers: { Accept: 'application/json' },
         });
         const body = await response.json().catch(() => ({}));
+        const trapped = company instanceof HTMLInputElement && company.value.trim() !== '';
         if (response.ok && body.ok) {
-          window.location.search = '?sent=1';
+          if (!trapped) {
+            consumeLead('contact');
+            track('generate_lead', { method: 'contact' });
+          }
+          const source = form.closest('[data-contact]')?.querySelector('[data-contact-success]');
+          if (source instanceof HTMLElement) {
+            const clone = source.cloneNode(true);
+            if (clone instanceof HTMLElement) {
+              clone.hidden = false;
+              form.replaceWith(clone);
+            }
+          }
           return;
         }
-        const message = body.code === 'not_configured' ? notConfigured : sendError;
+        const message = body.code === 'not_configured' ? form.dataset.msgConfig : form.dataset.msgError;
         if (error instanceof HTMLElement) {
           error.hidden = false;
-          error.textContent = message;
+          error.textContent = message ?? '';
         }
       } catch {
         if (error instanceof HTMLElement) {
           error.hidden = false;
-          error.textContent = sendError;
+          error.textContent = form.dataset.msgError ?? '';
         }
       }
       if (button instanceof HTMLButtonElement) {
         button.disabled = false;
-        button.textContent = send;
+        button.textContent = form.dataset.msgSend ?? '';
       }
     });
   }

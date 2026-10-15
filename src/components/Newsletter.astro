@@ -1,0 +1,132 @@
+---
+import type { Locale } from '../i18n/locale';
+import { t } from '../i18n/ui';
+import { newsletterCountries } from '../lib/newsletter';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const copy = t(locale);
+---
+
+<div data-newsletter>
+  <p class="eyebrow text-rose">{copy.newsletterEyebrow}</p>
+  <h2 class="wordmark mt-2 text-4xl">{copy.newsletterTitle}</h2>
+  <p class="mt-3 max-w-md text-sm leading-6 text-muted">{copy.newsletterText}</p>
+  <div data-newsletter-success hidden>
+    <div class="mt-6 border border-line p-6" role="status">
+      <p class="wordmark text-3xl">{copy.newsletterSentTitle}</p>
+      <p class="mt-2 text-sm leading-6 text-muted">{copy.newsletterSentText}</p>
+    </div>
+  </div>
+
+  <form
+    class="mt-6 space-y-4"
+    method="post"
+    action="/api/newsletter"
+    data-newsletter-form
+    data-msg-sending={copy.newsletterSending}
+    data-msg-send={copy.newsletterSend}
+    data-msg-error={copy.newsletterError}
+    data-msg-config={copy.newsletterNotConfigured}
+  >
+        <input type="hidden" name="locale" value={locale} />
+        <input type="hidden" name="next" value={Astro.url.pathname} />
+        <p class="absolute -left-[9999px] h-0 w-0 overflow-hidden" aria-hidden="true">
+          <label>
+            {copy.honeypot}
+            <input type="text" name="company" tabindex="-1" autocomplete="off" />
+          </label>
+        </p>
+        <label class="block">
+          <span class="eyebrow text-muted">{copy.email}</span>
+          <input
+            class="mt-2 w-full border border-line bg-transparent px-3 py-3 outline-none focus:border-ink"
+            type="email"
+            name="email"
+            required
+            maxlength="160"
+            autocomplete="email"
+            inputmode="email"
+          />
+        </label>
+        <label class="block">
+          <span class="eyebrow text-muted">{copy.newsletterCountry}</span>
+          <select class="mt-2 w-full border border-line bg-transparent px-3 py-3 outline-none focus:border-ink" name="country">
+            <option value="">{copy.newsletterCountryEmpty}</option>
+            {newsletterCountries.map((code) => (
+              <option value={code}>{copy.countryLabels[code]}</option>
+            ))}
+          </select>
+        </label>
+        <label class="flex items-start gap-3 text-sm leading-6">
+          <input class="mt-1" type="checkbox" name="consent" required />
+          <span>{copy.newsletterConsent}</span>
+        </label>
+    <p class="text-sm text-rose" data-newsletter-error hidden></p>
+    <button class="eyebrow border border-ink px-5 py-3 hover:bg-ink hover:text-paper" type="submit" data-newsletter-submit>
+      {copy.newsletterSend}
+    </button>
+  </form>
+</div>
+
+<script>
+  import { consumeLead, track } from '../scripts/consent';
+
+  document.querySelectorAll('[data-newsletter-form]').forEach((node) => {
+    if (!(node instanceof HTMLFormElement) || node.dataset.bound === 'true') return;
+    node.dataset.bound = 'true';
+    node.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const button = node.querySelector('[data-newsletter-submit]');
+      const error = node.querySelector('[data-newsletter-error]');
+      const company = node.querySelector('input[name="company"]');
+      if (button instanceof HTMLButtonElement) {
+        button.disabled = true;
+        button.textContent = node.dataset.msgSending ?? '';
+      }
+      if (error instanceof HTMLElement) error.hidden = true;
+      try {
+        const response = await fetch(node.action, {
+          method: 'POST',
+          body: new FormData(node),
+          headers: { Accept: 'application/json' },
+        });
+        const body = await response.json().catch(() => ({}));
+        const trapped = company instanceof HTMLInputElement && company.value.trim() !== '';
+        if (response.ok && body.ok) {
+          if (!trapped) {
+            consumeLead('newsletter');
+            track('generate_lead', { method: 'newsletter' });
+            track('sign_up', { method: 'newsletter' });
+          }
+          const source = node.closest('[data-newsletter]')?.querySelector('[data-newsletter-success]');
+          if (source instanceof HTMLElement) {
+            const clone = source.cloneNode(true);
+            if (clone instanceof HTMLElement) {
+              clone.hidden = false;
+              node.replaceWith(clone);
+            }
+          }
+          return;
+        }
+        const message = body.code === 'not_configured' ? node.dataset.msgConfig : node.dataset.msgError;
+        if (error instanceof HTMLElement) {
+          error.hidden = false;
+          error.textContent = message ?? '';
+        }
+      } catch {
+        if (error instanceof HTMLElement) {
+          error.hidden = false;
+          error.textContent = node.dataset.msgError ?? '';
+        }
+      }
+      if (button instanceof HTMLButtonElement) {
+        button.disabled = false;
+        button.textContent = node.dataset.msgSend ?? '';
+      }
+    });
+  });
+</script>

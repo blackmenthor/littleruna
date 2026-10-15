@@ -1,3 +1,4 @@
+/** Live locales. Add `de`, `es`, `fr`, or `tr` here when that copy exists in `ui` and `consent`. */
 export const locales = ['en', 'id'] as const;
 export type Locale = (typeof locales)[number];
 
